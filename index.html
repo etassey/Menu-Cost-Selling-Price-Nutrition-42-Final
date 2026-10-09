@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NUTR-42 Recipe Costing &amp; Pricing Activity</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --navy:#09225c;
+    --navy-light:#13378c;
+    --gold:#c9a227;
+    --bg:#f4f6fb;
+    --card:#ffffff;
+    --border:#d9dee8;
+    --good:#1e7e34;
+    --text:#1b2433;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:"Segoe UI",Arial,Helvetica,sans-serif;
+    margin:0; background:var(--bg); color:var(--text); line-height:1.5;
+  }
+  header{
+    background:var(--navy); color:#fff; padding:28px 20px; text-align:center;
+  }
+  header h1{margin:0 0 6px; font-size:1.6rem;}
+  header p{margin:0; opacity:.9; font-size:.95rem;}
+  nav.steps{
+    display:flex; flex-wrap:wrap; gap:8px; justify-content:center;
+    background:var(--navy-light); padding:10px; position:sticky; top:0; z-index:50;
+  }
+  nav.steps button{
+    background:transparent; border:2px solid rgba(255,255,255,.4); color:#fff;
+    padding:8px 16px; border-radius:20px; cursor:pointer; font-weight:600; font-size:.9rem;
+  }
+  nav.steps button.active{background:var(--gold); border-color:var(--gold); color:#1b2433;}
+  main{max-width:1000px; margin:0 auto; padding:24px 16px 80px;}
+  section.step{display:none;}
+  section.step.active{display:block;}
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:10px;
+    padding:20px; margin-bottom:22px; box-shadow:0 1px 3px rgba(0,0,0,.06);
+  }
+  .card h2{margin-top:0; color:var(--navy); font-size:1.25rem; border-bottom:2px solid var(--gold); padding-bottom:8px;}
+  .card h3{color:var(--navy-light); margin-bottom:4px;}
+  .formula-box{
+    background:#eef1fb; border-left:4px solid var(--navy); padding:10px 14px;
+    margin:10px 0; font-family:"Cambria Math",Georgia,serif; font-size:1rem;
+  }
+  label{font-weight:600; font-size:.85rem; display:block; margin-bottom:4px; color:var(--navy);}
+  input[type="text"], input[type="number"], textarea{
+    width:100%; padding:7px 8px; border:1px solid var(--border); border-radius:6px; font-size:.9rem;
+  }
+  textarea{min-height:70px; resize:vertical; font-family:inherit;}
+  .field{margin-bottom:12px;}
+  .row-flex{display:flex; gap:16px; flex-wrap:wrap;}
+  .row-flex .field{flex:1; min-width:160px;}
+  table{width:100%; border-collapse:collapse; margin-top:10px;}
+  th, td{border:1px solid var(--border); padding:6px 8px; text-align:left; font-size:.88rem;}
+  th{background:var(--navy); color:#fff; font-weight:600;}
+  tr:nth-child(even) td{background:#f8f9fd;}
+  td input{border:1px solid transparent; background:transparent; padding:5px;}
+  td input:focus{border-color:var(--navy-light); background:#fff;}
+  .btn{
+    background:var(--navy); color:#fff; border:none; padding:9px 16px; border-radius:6px;
+    cursor:pointer; font-size:.88rem; font-weight:600; margin:4px 6px 4px 0;
+  }
+  .btn:hover{background:var(--navy-light);}
+  .btn.secondary{background:#fff; color:var(--navy); border:1px solid var(--navy);}
+  .btn.danger{background:#fff; color:#b02a2a; border:1px solid #b02a2a;}
+  .btn.gold{background:var(--gold); color:#1b2433;}
+  .summary-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-top:14px;}
+  .stat{
+    background:var(--navy); color:#fff; padding:12px 14px; border-radius:8px; text-align:center;
+  }
+  .stat .label{font-size:.72rem; text-transform:uppercase; opacity:.85; letter-spacing:.03em;}
+  .stat .value{font-size:1.35rem; font-weight:700; margin-top:2px;}
+  .stat.gold{background:var(--gold); color:#1b2433;}
+  .pill{display:inline-block; padding:3px 10px; border-radius:20px; background:#e5e9f5; color:var(--navy); font-size:.75rem; font-weight:600; margin-left:8px;}
+  .nav-buttons{display:flex; justify-content:space-between; margin-top:18px;}
+  .recipe-tabs{display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap;}
+  .recipe-tabs button{
+    padding:7px 14px; border-radius:6px 6px 0 0; border:1px solid var(--border); border-bottom:none;
+    background:#e9ecf6; cursor:pointer; font-weight:600; color:var(--navy); font-size:.85rem;
+  }
+  .recipe-tabs button.active{background:var(--card); border-color:var(--navy); color:var(--navy);}
+  .recipe-panel{display:none;}
+  .recipe-panel.active{display:block;}
+  .hint{font-size:.8rem; color:#555; margin:4px 0 10px;}
+  .notice{background:#fff8e1; border:1px solid #e9d292; padding:10px 14px; border-radius:6px; font-size:.85rem; margin-bottom:14px;}
+  .export-area{white-space:pre-wrap; font-family:Consolas,monospace; font-size:.8rem; background:#1b2433; color:#d6e0ff; padding:16px; border-radius:8px; max-height:420px; overflow:auto;}
+  footer{text-align:center; font-size:.78rem; color:#64708a; padding:18px; }
+  @media print{
+    nav.steps, .btn, .recipe-tabs, footer{display:none !important;}
+    section.step{display:block !important;}
+    .card{break-inside:avoid; box-shadow:none;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>NUTR-42 &mdash; Recipe Costing &amp; Pricing Activity</h1>
+  <p>Walk through Part I (Recipe Cost), Part II (Selling Price), and Part III (Documentation) for your 3 final-event recipes.</p>
+</header>
+
+<nav class="steps">
+  <button data-step="intro" class="active">Start</button>
+  <button data-step="part1">Part I: Recipe Cost</button>
+  <button data-step="part2">Part II: Selling Price</button>
+  <button data-step="part3">Part III: Document &amp; Export</button>
+</nav>
+
+<main>
+
+  <!-- INTRO -->
+  <section id="intro" class="step active">
+    <div class="card">
+      <h2>Before You Start</h2>
+      <p>This tool helps you calculate <strong>total recipe cost</strong>, <strong>cost per portion</strong>, and an
+      <strong>ideal selling price</strong> for each of your 3 standardized recipes, scaled to <strong>50 servings</strong>.
+      Your entries are saved automatically in this browser as you work.</p>
+      <div class="notice">Tip: Have your standardized recipes and ingredient prices (grocery ads, apps, or your own
+      shopper knowledge) ready before you begin. You'll enter the original recipe yield and each ingredient's cost
+      for that yield &mdash; the tool scales everything to 50 servings for you.</div>
+      <div class="row-flex">
+        <div class="field">
+          <label>Your Name</label>
+          <input type="text" id="studentName" placeholder="Full name">
+        </div>
+        <div class="field">
+          <label>Group / Event Name</label>
+          <input type="text" id="groupName" placeholder="e.g., Group 3 &ndash; Spring Banquet">
+        </div>
+      </div>
+      <button class="btn gold" onclick="goToStep('part1')">Begin Part I &rarr;</button>
+    </div>
+  </section>
+
+  <!-- PART I -->
+  <section id="part1" class="step">
+    <div class="card">
+      <h2>Part I: Determine Recipe Cost</h2>
+      <p class="hint">Enter each recipe's original yield and ingredients. Costs scale automatically to the 50-serving target.</p>
+      <div class="formula-box">Recipe (Total) Cost = &sum; (ingredient cost, scaled)<br>Portion Cost = Total Recipe Cost &divide; Servings (50)</div>
+      <div class="recipe-tabs" id="recipeTabs"></div>
+      <div id="recipePanels"></div>
+    </div>
+    <div class="nav-buttons">
+      <button class="btn secondary" onclick="goToStep('intro')">&larr; Back</button>
+      <button class="btn" onclick="goToStep('part2')">Continue to Part II &rarr;</button>
+    </div>
+  </section>
+
+  <!-- PART II -->
+  <section id="part2" class="step">
+    <div class="card">
+      <h2>Part II: Calculate Selling Price</h2>
+      <p class="hint">Default desired food cost percentage is 33.3%, as specified in the assignment. You may adjust it if your instructor directs otherwise.</p>
+      <div class="formula-box">
+        Portion Cost = Total Food Cost &divide; Servings<br>
+        Selling Price = Food Cost (per portion) &divide; Desired Food Cost %
+      </div>
+      <div id="pricingPanels"></div>
+    </div>
+    <div class="nav-buttons">
+      <button class="btn secondary" onclick="goToStep('part1')">&larr; Back</button>
+      <button class="btn" onclick="goToStep('part3')">Continue to Part III &rarr;</button>
+    </div>
+  </section>
+
+  <!-- PART III -->
+  <section id="part3" class="step">
+    <div class="card">
+      <h2>Part III: Documentation and Upload</h2>
+      <p class="hint">Add any notes or assumptions (rounding, market prices, substitutions), then review and export your complete write-up to submit as your assignment file.</p>
+      <div class="field">
+        <label>Assumptions / Notes (rounding, market prices, substitutions, etc.)</label>
+        <textarea id="notesGlobal" placeholder="e.g., Produce prices sourced from local grocery ad dated..."></textarea>
+      </div>
+      <button class="btn" onclick="renderExport()">Generate Summary</button>
+      <button class="btn secondary" onclick="window.print()">Print / Save as PDF</button>
+      <button class="btn secondary" onclick="downloadSummary()">Download as Text File</button>
+      <button class="btn danger" onclick="clearAll()">Clear All Data</button>
+      <div id="exportWrapper" style="margin-top:16px;"></div>
+    </div>
+    <div class="nav-buttons">
+      <button class="btn secondary" onclick="goToStep('part2')">&larr; Back</button>
+      <span></span>
+    </div>
+  </section>
+
+</main>
+
+<footer>Built for NUTR-42 &middot; Recipe Costing &amp; Pricing Practice Activity &middot; Your work is autosaved in this browser only.</footer>
+
+<script>
+const STORAGE_KEY = 'nutr42_costing_activity_v1';
+const NUM_RECIPES = 3;
+const TARGET_SERVINGS = 50;
+
+function defaultState(){
+  return {
+    studentName:'', groupName:'', notesGlobal:'',
+    recipes: Array.from({length:NUM_RECIPES}, (_,i)=>({
+      name:'Recipe ' + (i+1),
+      originalServings: 10,
+      foodCostPct: 33.3,
+      notes:'',
+      ingredients:[
+        {name:'', qty:'', unit:'', cost:''},
+        {name:'', qty:'', unit:'', cost:''},
+        {name:'', qty:'', unit:'', cost:''}
+      ]
+    })),
+    activeRecipeTab: 0
+  };
+}
+
+let state = loadState();
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) return Object.assign(defaultState(), JSON.parse(raw));
+  }catch(e){}
+  return defaultState();
+}
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+// ---------- NAVIGATION ----------
+function goToStep(id){
+  document.querySelectorAll('section.step').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('nav.steps button').forEach(b=>b.classList.toggle('active', b.dataset.step===id));
+  if(id==='part2') renderPricing();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+document.querySelectorAll('nav.steps button').forEach(b=>{
+  b.addEventListener('click', ()=>goToStep(b.dataset.step));
+});
+
+document.getElementById('studentName').addEventListener('input', e=>{state.studentName=e.target.value; saveState();});
+document.getElementById('groupName').addEventListener('input', e=>{state.groupName=e.target.value; saveState();});
+document.getElementById('notesGlobal').addEventListener('input', e=>{state.notesGlobal=e.target.value; saveState();});
+
+// ---------- PART I: RECIPES ----------
+function renderRecipeTabs(){
+  const tabs = document.getElementById('recipeTabs');
+  tabs.innerHTML = '';
+  state.recipes.forEach((r,i)=>{
+    const b = document.createElement('button');
+    b.textContent = r.name || ('Recipe ' + (i+1));
+    b.className = i===state.activeRecipeTab ? 'active' : '';
+    b.onclick = ()=>{ state.activeRecipeTab=i; saveState(); renderAll(); };
+    tabs.appendChild(b);
+  });
+}
+
+function calcRecipe(r){
+  const scaleFactor = (Number(r.originalServings)||0) > 0 ? TARGET_SERVINGS / Number(r.originalServings) : 0;
+  let totalOriginalCost = 0;
+  r.ingredients.forEach(ing=>{
+    totalOriginalCost += Number(ing.cost)||0;
+  });
+  const scaledTotalCost = totalOriginalCost * scaleFactor;
+  const portionCost = TARGET_SERVINGS > 0 ? scaledTotalCost / TARGET_SERVINGS : 0;
+  return {scaleFactor, totalOriginalCost, scaledTotalCost, portionCost};
+}
+
+function renderRecipePanels(){
+  const wrap = document.getElementById('recipePanels');
+  wrap.innerHTML = '';
+  state.recipes.forEach((r,i)=>{
+    const panel = document.createElement('div');
+    panel.className = 'recipe-panel' + (i===state.activeRecipeTab ? ' active' : '');
+
+    const calc = calcRecipe(r);
+
+    panel.innerHTML = `
+      <div class="row-flex">
+        <div class="field" style="flex:2;">
+          <label>Recipe Name</label>
+          <input type="text" value="${escapeHtml(r.name)}" data-field="name" placeholder="Standardized recipe name">
+        </div>
+        <div class="field">
+          <label>Original Recipe Yield (servings)</label>
+          <input type="number" min="1" value="${r.originalServings}" data-field="originalServings">
+        </div>
+        <div class="field">
+          <label>Target Servings</label>
+          <input type="number" value="${TARGET_SERVINGS}" disabled>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Ingredient</th><th>Qty (original recipe)</th><th>Unit</th><th>Cost for Qty ($)</th><th>Scaled Cost ($)</th><th></th></tr>
+        </thead>
+        <tbody id="ingBody-${i}"></tbody>
+      </table>
+      <button class="btn secondary" data-action="addIng">+ Add Ingredient</button>
+      <div class="summary-grid">
+        <div class="stat"><div class="label">Scale Factor</div><div class="value">${calc.scaleFactor.toFixed(2)}&times;</div></div>
+        <div class="stat"><div class="label">Original Cost (as entered)</div><div class="value">$${calc.totalOriginalCost.toFixed(2)}</div></div>
+        <div class="stat gold"><div class="label">Total Recipe Cost @ 50 servings</div><div class="value">$${calc.scaledTotalCost.toFixed(2)}</div></div>
+        <div class="stat gold"><div class="label">Cost per Portion</div><div class="value">$${calc.portionCost.toFixed(2)}</div></div>
+      </div>
+    `;
+
+    // ingredient rows
+    const tbody = panel.querySelector(`#ingBody-${i}`);
+    r.ingredients.forEach((ing,j)=>{
+      const scaledCost = (Number(ing.cost)||0) * calc.scaleFactor;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="text" value="${escapeHtml(ing.name)}" data-ing="name" placeholder="e.g., All-purpose flour"></td>
+        <td><input type="text" value="${escapeHtml(ing.qty)}" data-ing="qty" placeholder="e.g., 2 cups"></td>
+        <td><input type="text" value="${escapeHtml(ing.unit)}" data-ing="unit" placeholder="e.g., cup"></td>
+        <td><input type="number" step="0.01" value="${ing.cost}" data-ing="cost" placeholder="0.00"></td>
+        <td style="font-weight:600; color:#09225c;">$${scaledCost.toFixed(2)}</td>
+        <td><button class="btn danger" style="padding:4px 8px;" data-action="delIng">&times;</button></td>
+      `;
+      tr.querySelectorAll('input').forEach(inp=>{
+        inp.addEventListener('input', e=>{
+          r.ingredients[j][e.target.dataset.ing] = e.target.value;
+          saveState();
+          renderRecipePanels();
+        });
+      });
+      tr.querySelector('[data-action="delIng"]').addEventListener('click', ()=>{
+        r.ingredients.splice(j,1);
+        saveState();
+        renderRecipePanels();
+      });
+      tbody.appendChild(tr);
+    });
+
+    panel.querySelectorAll('[data-field]').forEach(inp=>{
+      inp.addEventListener('input', e=>{
+        r[e.target.dataset.field] = e.target.value;
+        saveState();
+        renderRecipeTabs();
+        renderRecipePanels();
+      });
+    });
+    panel.querySelector('[data-action="addIng"]').addEventListener('click', ()=>{
+      r.ingredients.push({name:'', qty:'', unit:'', cost:''});
+      saveState();
+      renderRecipePanels();
+    });
+
+    wrap.appendChild(panel);
+  });
+}
+
+// ---------- PART II: PRICING ----------
+function renderPricing(){
+  const wrap = document.getElementById('pricingPanels');
+  wrap.innerHTML = '';
+  state.recipes.forEach((r,i)=>{
+    const calc = calcRecipe(r);
+    const pct = Number(r.foodCostPct) || 0;
+    const sellingPrice = pct > 0 ? calc.portionCost / (pct/100) : 0;
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.style.marginBottom = '16px';
+    div.innerHTML = `
+      <h3>${escapeHtml(r.name || ('Recipe ' + (i+1)))}</h3>
+      <div class="row-flex">
+        <div class="field">
+          <label>Cost per Portion (from Part I)</label>
+          <input type="text" value="$${calc.portionCost.toFixed(2)}" disabled>
+        </div>
+        <div class="field">
+          <label>Desired Food Cost %</label>
+          <input type="number" step="0.1" value="${r.foodCostPct}" data-pricing="foodCostPct">
+        </div>
+        <div class="field">
+          <label>Ideal Selling Price per Portion</label>
+          <input type="text" value="$${sellingPrice.toFixed(2)}" disabled style="font-weight:700; color:#09225c;">
+        </div>
+      </div>
+      <div class="hint">$${calc.portionCost.toFixed(2)} &divide; ${(pct/100).toFixed(3)} = $${sellingPrice.toFixed(2)} per portion</div>
+    `;
+    div.querySelector('[data-pricing="foodCostPct"]').addEventListener('input', e=>{
+      r.foodCostPct = e.target.value;
+      saveState();
+      renderPricing();
+    });
+    wrap.appendChild(div);
+  });
+}
+
+// ---------- PART III: EXPORT ----------
+function buildSummaryText(){
+  let out = '';
+  out += 'NUTR-42 RECIPE COSTING & PRICING ASSIGNMENT\n';
+  out += '='.repeat(50) + '\n';
+  out += `Name: ${state.studentName || '[not entered]'}\n`;
+  out += `Group/Event: ${state.groupName || '[not entered]'}\n`;
+  out += `Target Servings: ${TARGET_SERVINGS}\n\n`;
+
+  state.recipes.forEach((r,i)=>{
+    const calc = calcRecipe(r);
+    const pct = Number(r.foodCostPct) || 0;
+    const sellingPrice = pct > 0 ? calc.portionCost / (pct/100) : 0;
+
+    out += `-- RECIPE ${i+1}: ${r.name || '[unnamed]'} --\n`;
+    out += `Original Yield: ${r.originalServings} servings | Scale Factor to 50: ${calc.scaleFactor.toFixed(2)}x\n`;
+    out += `Ingredients:\n`;
+    r.ingredients.forEach(ing=>{
+      const scaledCost = (Number(ing.cost)||0) * calc.scaleFactor;
+      out += `   - ${ing.name || '[ingredient]'} | ${ing.qty || ''} ${ing.unit || ''} | Original cost: $${(Number(ing.cost)||0).toFixed(2)} | Scaled cost: $${scaledCost.toFixed(2)}\n`;
+    });
+    out += `Total Recipe Cost (scaled to 50 servings): $${calc.scaledTotalCost.toFixed(2)}\n`;
+    out += `Cost per Portion: $${calc.portionCost.toFixed(2)}\n`;
+    out += `Desired Food Cost %: ${pct}%\n`;
+    out += `Formula: Selling Price = Portion Cost / Food Cost % = $${calc.portionCost.toFixed(2)} / ${(pct/100).toFixed(3)}\n`;
+    out += `Ideal Selling Price per Portion: $${sellingPrice.toFixed(2)}\n\n`;
+  });
+
+  out += 'ASSUMPTIONS / NOTES:\n';
+  out += (state.notesGlobal || '[none entered]') + '\n';
+  return out;
+}
+
+function renderExport(){
+  const text = buildSummaryText();
+  const wrap = document.getElementById('exportWrapper');
+  wrap.innerHTML = `<div class="export-area">${escapeHtml(text)}</div>`;
+}
+
+function downloadSummary(){
+  const text = buildSummaryText();
+  const blob = new Blob([text], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (state.groupName || 'nutr42_recipe_costing') .replace(/[^a-z0-9_\- ]/gi,'') + '_summary.txt';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function clearAll(){
+  if(confirm('This will erase all entered data in this browser. Continue?')){
+    localStorage.removeItem(STORAGE_KEY);
+    state = defaultState();
+    document.getElementById('studentName').value = '';
+    document.getElementById('groupName').value = '';
+    document.getElementById('notesGlobal').value = '';
+    document.getElementById('exportWrapper').innerHTML = '';
+    renderAll();
+    goToStep('intro');
+  }
+}
+
+function escapeHtml(str){
+  return String(str ?? '').replace(/[&<>"']/g, m=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[m]));
+}
+
+function renderAll(){
+  renderRecipeTabs();
+  renderRecipePanels();
+}
+
+// init
+document.getElementById('studentName').value = state.studentName;
+document.getElementById('groupName').value = state.groupName;
+document.getElementById('notesGlobal').value = state.notesGlobal;
+renderAll();
+</script>
+</body>
+</html>
